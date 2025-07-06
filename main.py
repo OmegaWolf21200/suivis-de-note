@@ -43,18 +43,23 @@ class App:
         
         self.all_lists = [self.user_list, self.year_list, self.trimester_list, self.matter_list, self.rate_list]
         
+    #---Méthode SQL---
+    def get_table(self,table,condition=None):
+        return self.data.request(f"SELECT * FROM {table} WHERE {condition}" if condition != None else f"SELECT * FROM {table}")
+    
+    #---Méthode général---
     def update(self):
         [group.clear for group in self.all_lists]
-        for user_data in self.data.request("SELECT * FROM user"):
+        for user_data in self.get_table("user"):
             self.user_list.append(Register(user_data[0],None, user_data[1]))
-        for year_data in self.data.request("SELECT * FROM year"):
-            self.year_list.append(Register(year_data[0], year_data[1], year_data[2]))
-        for trimester_data in self.data.request("SELECT * FROM trimester"):
-            self.trimester_list.append(Register(trimester_data[0],trimester_data[1],trimester_data[2]))
-        for matter_data in self.data.request("SELECT * FROM matter"):
-            self.matter_list.append(Register(matter_data[0], matter_data[1], matter_data[2]))
-        for rate_data in self.data.request("SELECT * FROM rate"):
-            self.rate_list.append(Rate(rate_data[0], rate_data[1], rate_data[2], rate_data[3], rate_data[4]))            
+        for year_data in self.get_table("year"):
+            self.year_list.append(Register(*(year_data[i] for i in range(3))))
+        for trimester_data in self.get_table("trimester"):
+            self.trimester_list.append(Register(*(trimester_data[i] for i in range(3))))
+        for matter_data in self.get_table("matter"):
+            self.matter_list.append(Register(*(matter_data[i] for i in range(3))))
+        for rate_data in self.get_table("rate"):
+            self.rate_list.append(Rate(*(rate_data[i] for i in range(5))))            
 
 db = Data("data.db")
 
