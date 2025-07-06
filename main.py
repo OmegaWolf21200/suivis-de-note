@@ -21,6 +21,14 @@ class Register:
         self.id_link = id_link
         self.name = name
         
+class Rate:
+    def __init__(self,id,id_matter,name,value,coef):
+        self.id = id
+        self.id_matter = id_matter
+        self.name = name
+        self.value = value
+        self.coef = coef
+        
 
 class App:
     def __init__(self, data:Data, user_list = None, year_list = None, trimester_list = None, matter_list = None, rate_list =None):
@@ -46,14 +54,13 @@ class App:
         for matter_data in self.data.request("SELECT * FROM matter"):
             self.matter_list.append(Register(matter_data[0], matter_data[1], matter_data[2]))
         for rate_data in self.data.request("SELECT * FROM rate"):
-            pass
-            
-        
+            self.rate_list.append(Rate(rate_data[0], rate_data[1], rate_data[2], rate_data[3], rate_data[4]))            
+
 db = Data("data.db")
 
 app = App(db)
 app.update()
-    
+
 db.close()
     
         
