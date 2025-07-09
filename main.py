@@ -16,18 +16,20 @@ class Data:
         self.conn.close()
 
 class Register:
-    def __init__(self, id, id_link, name):
+    def __init__(self, id, id_link, name, cat):
         self.id = id
         self.id_link = id_link
         self.name = name
+        self.cat = cat
         
 class Rate:
-    def __init__(self,id,id_matter,name,value,coef):
+    def __init__(self,id,id_link,name,value,coef,cat):
         self.id = id
-        self.id_matter = id_matter
+        self.id_link = id_link
         self.name = name
         self.value = value
         self.coef = coef
+        self.cat = cat
         
 
 class App:
@@ -41,25 +43,52 @@ class App:
         self.matter_list = matter_list if matter_list != None else []
         self.rate_list = rate_list if rate_list != None else []
         
+        self.dict_table = {
+            "U" : "user",
+            "Y" : "year",
+            "T" : "trimester",
+            "M" : "matter",
+            "R" : "rate"
+        }
+        
         self.all_lists = [self.user_list, self.year_list, self.trimester_list, self.matter_list, self.rate_list]
         
     #---Méthode SQL---
     def get_table(self,table,condition=None):
         return self.data.request(f"SELECT * FROM {table} WHERE {condition}" if condition != None else f"SELECT * FROM {table}")
     
+    def add_table(self,objects):
+        if objects.cat == "U":
+            id = self.data.request(f"INSERT INTO user (name) VALUES ('{objects.name}') RETURNING id;")
+        elif objects.cat == "Y":
+            id = self.data.request(f"INSERT INTO year (id_user, name) VALUES ('{objects.id_link}', '{objects.name}') RETURNING id;")
+        elif objects.cat == "T":
+            id = self.data.request(f"INSERT INTO trimester (id_year, name) VALUES ('{objects.id_link}', '{objects.name}') RETURNING id;")
+        elif objects.cat == "M":
+            id = self.data.request(f"INSERT INTO matter (id_trimester, name) VALUES ('{objects.id_link}', '{objects.name}') RETURNING id;")
+        elif objects.cat == "R":
+            id = self.data.request(f"INSERT INTO rate (id_matter, name, value, coef) VALUES ('{objects.id_link}', '{objects.name}', '{objects.value}', '{objects.coef}') RETURNING id;")
+        
+        app.update()
+        return id[0][0]
+    
+    def sup_table(self, objects):
+        app.data.request(f"DELETE FROM {app.dict_table[objects.cat]} WHERE id = '{objects.id}'")
+        
+    
     #---Méthode général---
     def update(self):
         [group.clear for group in self.all_lists]
         for user_data in self.get_table("user"):
-            self.user_list.append(Register(user_data[0],None, user_data[1]))
+            self.user_list.append(Register(user_data[0],None, user_data[1],"U"))
         for year_data in self.get_table("year"):
-            self.year_list.append(Register(*(year_data[i] for i in range(3))))
+            self.year_list.append(Register(*(year_data[i] for i in range(3)), "Y"))
         for trimester_data in self.get_table("trimester"):
-            self.trimester_list.append(Register(*(trimester_data[i] for i in range(3))))
+            self.trimester_list.append(Register(*(trimester_data[i] for i in range(3)), "T"))
         for matter_data in self.get_table("matter"):
-            self.matter_list.append(Register(*(matter_data[i] for i in range(3))))
+            self.matter_list.append(Register(*(matter_data[i] for i in range(3)), "M"))
         for rate_data in self.get_table("rate"):
-            self.rate_list.append(Rate(*(rate_data[i] for i in range(5))))            
+            self.rate_list.append(Rate(*(rate_data[i] for i in range(5)), "R"))            
 
 db = Data("data.db")
 
