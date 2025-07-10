@@ -60,20 +60,28 @@ class App:
     def add_table(self,objects):
         if objects.cat == "U":
             id = self.data.request(f"INSERT INTO user (name) VALUES ('{objects.name}') RETURNING id;")
-        elif objects.cat == "Y":
-            id = self.data.request(f"INSERT INTO year (id_user, name) VALUES ('{objects.id_link}', '{objects.name}') RETURNING id;")
-        elif objects.cat == "T":
-            id = self.data.request(f"INSERT INTO trimester (id_year, name) VALUES ('{objects.id_link}', '{objects.name}') RETURNING id;")
-        elif objects.cat == "M":
-            id = self.data.request(f"INSERT INTO matter (id_trimester, name) VALUES ('{objects.id_link}', '{objects.name}') RETURNING id;")
         elif objects.cat == "R":
             id = self.data.request(f"INSERT INTO rate (id_matter, name, value, coef) VALUES ('{objects.id_link}', '{objects.name}', '{objects.value}', '{objects.coef}') RETURNING id;")
+        else:
+            id = self.data.request(f"INSERT INTO {app.dict_table[objects.cat]} (id_link, name) VALUES ('{objects.id_link}', '{objects.name}') RETURNING id;")
+        
         
         app.update()
         return id[0][0]
     
     def sup_table(self, objects):
-        app.data.request(f"DELETE FROM {app.dict_table[objects.cat]} WHERE id = '{objects.id}'")
+        app.data.request(f"DELETE FROM {app.dict_table[objects.cat]} WHERE id = '{objects.id}';")
+        app.update()
+        
+    def edit_table(self,objects,new_objects):
+        if objects.cat != "R":
+            app.data.request(f"UPDATE {app.dict_table[objects.cat]} SET name = '{new_objects.name}' WHERE id = '{objects.id}';")
+        else:
+            app.data.request(f"UPDATE rate SET name = '{new_objects.name}', value = '{new_objects.value}', coef = '{new_objects.coef}' WHERE id = '{objects.id}';")
+            
+        app.update()
+        
+        
         
     
     #---Méthode général---
